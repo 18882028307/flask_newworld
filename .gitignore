@@ -2,3 +2,5 @@
 .idea
 *.py[cod]
 even/
+logs/log*
+migrations
