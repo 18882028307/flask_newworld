@@ -11,6 +11,8 @@ from redis import StrictRedis
 from config import config
 
 # 初始化数据库
+
+
 db = SQLAlchemy()
 
 # 变量注释,指定变量类型(使用全局变量无法智能提示时)
@@ -47,5 +49,8 @@ def create_app(config_name):
     # 注册蓝图
     from .modules.index import index_blu
     app.register_blueprint(index_blu)
-    
+
+    from .modules.passport import passport_blu
+    app.register_blueprint(passport_blu)
+
     return app
