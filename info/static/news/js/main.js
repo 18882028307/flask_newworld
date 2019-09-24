@@ -110,6 +110,25 @@ $(function(){
         }
 
         // 发起登录请求
+        var params = {
+            'mobile': mobile,
+            'password': password,
+        }
+        $.ajax({
+            url: "/passport/login",
+            method: "post",
+            data: JSON.stringify(params),
+            contentType: "application/json",
+            success: function(resp){
+                if (resp.errno == "0"){
+                    // 刷新当前页面
+                    location.reload();
+                }else {
+                    $("#login-password-err").html(resp.errmsg)
+                    $("#login-password-err").show()
+                }
+            }
+        })
     })
 
 
@@ -155,7 +174,7 @@ $(function(){
             data: JSON.stringify(params),
             contentType: "application/json",
             success: function (resp) {
-                if (resp.error == '0'){
+                if (resp.errno == '0'){
                     // 刷新当前页面
                     location.reload()
                 }else {
@@ -176,7 +195,7 @@ function generateImageCode() {
     // 生成随机码
     imageCodeId = generateUUID()
     // 生成url
-    var url = '/passports/image_code?image_Code=' + imageCodeId
+    var url = '/passport/image_code?image_Code=' + imageCodeId
     // 给图片验证码img设置src属性
     $('.get_pic_code').attr('src', url)
 }
