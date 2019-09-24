@@ -213,8 +213,8 @@ function sendSMSCode() {
     }
     var imageCode = $("#imagecode").val();
     if (!imageCode) {
-        $("#image-code-err").html("请填写验证码！");
-        $("#image-code-err").show();
+        $("#register-image-code-err").html("请填写验证码！");
+        $("#register-image-code-err").show();
         $(".get_code").attr("onclick", "sendSMSCode();");
         return;
     }
@@ -235,8 +235,8 @@ function sendSMSCode() {
         data: JSON.stringify(params),
         // 数据类型
         contentType: 'application/json',
-        success: function (response) {
-            if(response.errno == '0'){
+        success: function (resp) {
+            if(resp.errno == '0'){
                 //代表发送成功
                 var num = 60
                 var t =setInterval(function () {
@@ -256,10 +256,11 @@ function sendSMSCode() {
                     }
                 }, 1000)
             }else {
+                // alert(resp.errmsg)
                // 代表发送失败
                // 表示后端出现了错误，可以将错误信息展示到前端页面中
-                $("#register-sms-code-err").html(resp.errmsg);
-                $("#register-sms-code-err").show();
+                $("#register-image-code-err").html(resp.errmsg);
+                $("#register-image-code-err").show();
                 // 将点击按钮的onclick事件函数恢复回去
                 $(".get_code").attr("onclick", "sendSMSCode();");
                 // 如果错误码是4004，代表验证码错误，重新生成验证码

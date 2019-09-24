@@ -54,14 +54,18 @@ def send_sms_code():
     image_code = data.get('image_code')
     image_code_id = data.get('image_code_id')
 
+
     # 2. 校验参数(参数是否符合规则，判断是否有值)
     # 判断参数是否有值
     if not all([mobile, image_code, image_code_id]):
         # {"errno": "4100", "errmsg": "参数有误"}
+        print('111')
         return jsonify(errno=RET.PARAMERR, errmsg="参数有误")
+
     # 验证手机号是否正确
     # if not re.match('1[35678]\\d{9}', mobile):
     #     return jsonify(errno=RET.PARAMERR, errmsg='手机格式不正确')
+
     # 3. 先从redis中取出真实的验证码内容
     try:
         real_image_code = redis_store.get('ImageCode_'+image_code_id)
