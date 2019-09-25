@@ -93,6 +93,10 @@ $(function(){
 		$(this).find('a')[0].click()
 	})
 
+
+
+
+
     // TODO 登录表单提交
     $(".login_form_con").submit(function (e) {
         e.preventDefault()
@@ -117,6 +121,9 @@ $(function(){
         $.ajax({
             url: "/passport/login",
             method: "post",
+            headers: {
+                "X-CSRFToken": getCookie("csrf_token")
+            },
             data: JSON.stringify(params),
             contentType: "application/json",
             success: function(resp){
@@ -130,6 +137,8 @@ $(function(){
             }
         })
     })
+
+
 
 
     // TODO 注册按钮点击
@@ -171,6 +180,9 @@ $(function(){
 		$.ajax({
             url: "/passport/register",
             type: 'post',
+            headers: {
+                "X-CSRFToken": getCookie("csrf_token")
+            },
             data: JSON.stringify(params),
             contentType: "application/json",
             success: function (resp) {
@@ -186,6 +198,10 @@ $(function(){
 
     })
 })
+
+
+
+
 
 var imageCodeId = ""
 
@@ -271,6 +287,24 @@ function sendSMSCode() {
         }
     })
 }
+
+// 退出登录
+function logout(){
+    $.ajax({
+        url: '/passport/logout',
+        type: 'post',
+        contentType: 'application/json',
+        headers: {
+            "X-CSRFToken": getCookie('csrf_token')
+        },
+        success: function (resp) {
+            // 刷新当前页面
+            location.reload()
+        }
+    })
+}
+
+
 
 // 调用该函数模拟点击左侧按钮
 function fnChangeMenu(n) {

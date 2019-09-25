@@ -1,7 +1,8 @@
-from flask import render_template, session, current_app, g
+from flask import render_template, session, current_app, g, request, jsonify
 
 from info import constants
 from info.models import User, News, Category
+from info.utils.response_code import RET
 from . import index_blu
 
 # 测试
@@ -25,6 +26,7 @@ def index():
         except Exception as e:
             current_app.logger.error(e)
 
+
     # user = g.user
     # 右侧的新闻排行的逻辑
     news_list = []
@@ -42,16 +44,84 @@ def index():
     # 查询分类数据，通过模板的形式渲染出来
     categories = Category.query.all()
     category_li = []
-
     for category in categories:
         category_li.append(category.to_dict())
 
-    data = {
+    datas = {
         'user': user.to_dict() if user else None,
         'news_dict_li': news_dict_li,
         'category_li': category_li
     }
-    return render_template('news/index.html', data=data)
+    return render_template('news/index.html', data=datas)
+
+
+@index_blu.route('/news_list')
+def news_list():
+    """
+    获取首页新闻数据
+    :return:
+    """
+    # 1. 获取参数,并指定默认为最新分类,第一页,一页显示10条数据
+    page = request.args.get('page', 1)
+    per_page = request.args.get('per_page', constants.HOME_PAGE_MAX_NEWS)
+    category_id = request.args.get('cid', 1)
+
+    # 2. 校验参数
+    try:
+        page = int(page)
+        per_page = int(per_page)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+    # 默认选择最新数据分类
+    filters = [News.status == 0]
+    # 如果查询的不是最新数据
+    if category_id != 1:
+        filters.append(News.category_id == category_id)
+
+    # 3. 查询数据
+    try:
+        paginate = News.query.filter(*filters).order_by(News.create_time.desc()).paginate(page, per_page, False)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='数据查询错误')
+    # 获取当前页数据
+    items = paginate.items
+    total_page = paginate.pages
+    current_page = paginate.page
+
+    # 将模型对象列表转成字典列表
+    news_dict_li = []
+    for news in items:
+        news_dict_li.append(news.to_basic_dict())
+
+    # 返回数据
+    data = {
+        'total_page': total_page,
+        'current_page': current_page,
+        'news_dict_li': news_dict_li
+    }
+
+    return jsonify(errno=RET.OK, errmsg='OK', data=data)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # 在打开网页的时候，浏览器会默认去请求根路径+favicon.ico作网站标签的小图标

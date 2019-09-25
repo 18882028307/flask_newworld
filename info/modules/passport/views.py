@@ -187,9 +187,9 @@ def login():
     if not all([mobile, password]):
         return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
 
-    # 检验手机号是否正确
-    if not re.match('1[35678]\\d{9}', mobile):
-        return jsonify(errno=RET.PARAMERR, errmsg="手机号格式不正确")
+    # # 检验手机号是否正确
+    # if not re.match('1[35678]\\d{9}', mobile):
+    #     return jsonify(errno=RET.PARAMERR, errmsg="手机号格式不正确")
 
     # 2. 从数据库查询出指定的用户
     try:
@@ -225,3 +225,16 @@ def login():
 
     # 5. 响应
     return jsonify(errno=RET.OK, errmsg="登录成功")
+
+
+@passport_blu.route('/logout', methods=['POST'])
+def logout():
+    """
+    清除session中的对应登录之后保存的信息
+    :return:
+    """
+    session.pop('user_id', None)
+    session.pop('mobile', None)
+    session.pop('nick_name', None)
+    # 返回结果
+    return jsonify(errno=RET.OK, errmsg="退出成功")
