@@ -66,6 +66,7 @@ function updateNewsData() {
         // 总页数赋值
         if (resp){
             total_page = resp.data.total_page
+            // alert(total_page)
             // 先清空原有数据
             if (cur_page == 1){
                 $(".list_con").html('')

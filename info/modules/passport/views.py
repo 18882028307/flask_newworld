@@ -165,9 +165,6 @@ def register():
         session['user_id'] = user.id
         session['mobile'] = user.mobile
         session['nick_name'] = user.nick_name
-        print(mobile)
-        print(smscode)
-        print(password)
         # 6. 返回注册结果
         return jsonify(errno=RET.OK, errmsg='注册成功')
 

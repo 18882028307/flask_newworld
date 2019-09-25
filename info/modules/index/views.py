@@ -2,13 +2,14 @@ from flask import render_template, session, current_app, g, request, jsonify
 
 from info import constants
 from info.models import User, News, Category
+from info.utils.common import user_login_data
 from info.utils.response_code import RET
 from . import index_blu
 
 # 测试
 
 @index_blu.route('/')
-# @user_login_data
+@user_login_data
 def index():
     '''
     显示首页
@@ -17,17 +18,17 @@ def index():
     '''
     # # 显示用户是否登录的逻辑
     # # 获取用户id
-    user_id = session.get('user_id', None)
-    user = None
-    if user_id:
-        # 尝试查询用户的模型
-        try:
-            user = User.query.get(user_id)
-        except Exception as e:
-            current_app.logger.error(e)
+    # user_id = session.get('user_id', None)
+    # user = None
+    # if user_id:
+    #     # 尝试查询用户的模型
+    #     try:
+    #         user = User.query.get(user_id)
+    #     except Exception as e:
+    #         current_app.logger.error(e)
 
 
-    # user = g.user
+    user = g.user
     # 右侧的新闻排行的逻辑
     news_list = []
     try:
@@ -62,9 +63,9 @@ def news_list():
     :return:
     """
     # 1. 获取参数,并指定默认为最新分类,第一页,一页显示10条数据
-    page = request.args.get('page', 1)
-    per_page = request.args.get('per_page', constants.HOME_PAGE_MAX_NEWS)
-    category_id = request.args.get('cid', 1)
+    page = request.args.get('page', 1)  # 第几页，默认为1
+    per_page = request.args.get('per_page', constants.HOME_PAGE_MAX_NEWS)  # 每页的条数，默认10
+    category_id = request.args.get('cid', 1)    # 分类id，默认为1
 
     # 2. 校验参数
     try:
@@ -73,7 +74,7 @@ def news_list():
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
-    # 默认选择最新数据分类
+    # 默认选择审核通过的数据
     filters = [News.status == 0]
     # 如果查询的不是最新数据
     if category_id != 1:
@@ -85,10 +86,10 @@ def news_list():
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg='数据查询错误')
-    # 获取当前页数据
-    items = paginate.items
-    total_page = paginate.pages
-    current_page = paginate.page
+
+    items = paginate.items          # 获取当前页数据
+    total_page = paginate.pages     # 总页数
+    current_page = paginate.page    # 当前页数
 
     # 将模型对象列表转成字典列表
     news_dict_li = []

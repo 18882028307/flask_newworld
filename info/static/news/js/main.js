@@ -36,6 +36,7 @@ $(function(){
 	$('.form_group').on('click focusin',function(){
 		$(this).children('.input_tip').animate({'top':-5,'font-size':12},'fast').siblings('input').focus().parent().addClass('hotline');
 	})
+    
 
 	// 输入框失去焦点，如果输入框为空，则提示文字下移
 	$('.form_group input').on('blur focusout',function(){
@@ -73,7 +74,7 @@ $(function(){
 	if(sHash!=''){
 		var sId = sHash.substring(1);
 		var oNow = $('.'+sId);		
-		var iNowIndex = oNow.index();
+		var iNowIndex = oNow.index_copy();
 		$('.option_list li').eq(iNowIndex).addClass('active').siblings().removeClass('active');
 		oNow.show().siblings().hide();
 	}
@@ -83,7 +84,7 @@ $(function(){
 	var $frame = $('#main_frame');
 
 	$li.click(function(){
-		if($(this).index()==5){
+		if($(this).index_copy()==5){
 			$('#main_frame').css({'height':900});
 		}
 		else{
