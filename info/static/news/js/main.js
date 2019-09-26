@@ -80,7 +80,7 @@ $(function(){
 	if(sHash!=''){
 		var sId = sHash.substring(1);
 		var oNow = $('.'+sId);		
-		var iNowIndex = oNow.index_copy();
+		var iNowIndex = oNow.index();
 		$('.option_list li').eq(iNowIndex).addClass('active').siblings().removeClass('active');
 		oNow.show().siblings().hide();
 	}
@@ -90,7 +90,7 @@ $(function(){
 	var $frame = $('#main_frame');
 
 	$li.click(function(){
-		if($(this).index_copy()==5){
+		if($(this).index()==5){
 			$('#main_frame').css({'height':900});
 		}
 		else{

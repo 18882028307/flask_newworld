@@ -72,6 +72,9 @@ def create_app(config_name):
     from .modules.news import news_blu
     app.register_blueprint(news_blu)
 
+    from .modules.profile import profile_blu
+    app.register_blueprint(profile_blu)
+
 
     # 注册过滤器
     from info.utils.common import do_index_class
