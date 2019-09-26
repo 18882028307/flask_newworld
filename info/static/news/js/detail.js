@@ -79,7 +79,7 @@ $(function(){
      
     })
 
-        // 评论提交
+    // 评论提交
     $(".comment_form").submit(function (e) {
         e.preventDefault();
         // 获取新闻id
@@ -146,6 +146,7 @@ $(function(){
 
     })
 
+    // 评论点赞
     $('.comment_list_con').delegate('a,input','click',function(){
 
         var sHandler = $(this).prop('class');
@@ -186,12 +187,27 @@ $(function(){
                 data: JSON.stringify(params),
                 success: function (resp) {
                     if (resp.errno == '0'){
+                        // 更新点赞次数
+                        var like_count = $this.attr('data-likecount')
+                        // alert(like_count)
+                        if (like_count == undefined){
+                            like_count = 0
+                        }
                         // 更新点赞按钮
                         if (action == 'add'){
+                            like_count = parseInt(like_count) + 1
                             // 代表点赞
-                            $this.addClass("has_comment_up")
+                            $this.addClass('has_comment_up')
                         }else {
-                            %this.removeClass("has_comment_up")
+                            like_count = parseInt(like_count) - 1
+                            $this.removeClass('has_comment_up')
+                        }
+                        // 更新点赞数据
+                        $this.attr('data-likecount', like_count)
+                        if ( like_count == 0){
+                            $this.html('赞')
+                        }else {
+                            $this.html(like_count)
                         }
                     }else if (resp.errno == '4101'){
                         $('.login_form_con').show();
@@ -202,6 +218,7 @@ $(function(){
             })
         }
 
+        // 回复评论
         if(sHandler.indexOf('reply_sub')>=0)
         {
             // alert('回复评论')
