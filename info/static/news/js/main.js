@@ -33,16 +33,16 @@ $(function(){
 
 
 	// 点击输入框，提示文字上移
-	$('.form_group').on('click focusin',function(){
-		$(this).children('.input_tip').animate({'top':-5,'font-size':12},'fast').siblings('input_tip').focus().parent().addClass('hotline');
-	})
-    // $('.form_group').on('click', function () {
-    //     $(this).children('input').focus()
-    // })
-    // $('.form_group input').on('focusin', function () {
-    //     $(this).siblings('.input_tip').animate({'top':5,'font-size':12}, 'fast');
-    //     $(this).parent().addClass('hotline');
-    // })
+	// $('.form_group').on('click focusin',function(){
+	// 	$(this).children('.input_tip').animate({'top':-5,'font-size':12},'fast').siblings('input_tip').focus().parent().addClass('hotline');
+	// })
+    $('.form_group').on('click', function () {
+        $(this).children('input').focus()
+    })
+    $('.form_group input').on('focusin', function () {
+        $(this).siblings('.input_tip').animate({'top':5,'font-size':12}, 'fast');
+        $(this).parent().addClass('hotline');
+    })
 
 	// 输入框失去焦点，如果输入框为空，则提示文字下移
 	$('.form_group input').on('blur focusout',function(){
