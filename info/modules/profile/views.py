@@ -271,8 +271,8 @@ def user_news_list():
     try:
         # 进行分页数据查询
         # paginate（page, per_page, error_out, max_per_page）
-        # paginate = user.news_list.paginate(p, constants.USER_COLLECTION_MAX_NEWS, False)
-        paginate = News.query.filter(News.user_id == user.id).paginate(p, constants.USER_COLLECTION_MAX_NEWS, False)
+        paginate = user.news_list.order_by(News.create_time.desc()).paginate(p, constants.USER_COLLECTION_MAX_NEWS, False)
+        # paginate = News.query.filter(News.user_id == user.id).paginate(p, constants.USER_COLLECTION_MAX_NEWS, False)
 
         # 获取当前页数据
         news_list = paginate.items

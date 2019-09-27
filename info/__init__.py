@@ -1,7 +1,7 @@
 import logging
 from logging.handlers import RotatingFileHandler
 
-from flask import Flask
+from flask import Flask, g, render_template
 # 可以用来指定 session 保存的位置
 from flask_wtf import CSRFProtect
 from flask_session import Session
@@ -9,6 +9,12 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import generate_csrf
 from redis import StrictRedis
 from config import config
+
+
+
+
+from info.utils.common import user_login_data
+
 
 
 
@@ -55,11 +61,24 @@ def create_app(config_name):
 
     @app.after_request
     def after_request(response):
+        '''
+        csrf_token
+        :param response:
+        :return:
+        '''
         # 调用函数生成 csrf_token
         csrf_token = generate_csrf()
         # 通过 cookie 将值传给前端
         response.set_cookie("csrf_token", csrf_token)
         return response
+
+    @app.errorhandler(404)
+    @user_login_data
+    def page_not_found(_):
+        '''404错误'''
+        user = g.user
+        data = {"user_info": user.to_dict() if user else None}
+        return render_template('news/404.html', data=data)
 
 
     # 注册蓝图
