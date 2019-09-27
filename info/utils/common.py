@@ -18,6 +18,12 @@ def do_index_class(index):
 def user_login_data(f):
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
+        '''
+        获取用户信息，将其加入g变量
+        :param args:
+        :param kwargs:
+        :return:
+        '''
         # 获取到当前登录用户的id
         user_id = session.get('user_id')
         # 通过id获取用户信息

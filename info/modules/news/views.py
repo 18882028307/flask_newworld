@@ -1,7 +1,7 @@
 from flask import render_template, g, abort, current_app, request, jsonify
 
 from info import constants, db
-from info.models import News, Comment, CommentLike
+from info.models import News, Comment, CommentLike, User
 from info.modules.news import news_blu
 from info.utils.common import user_login_data
 from info.utils.response_code import RET
@@ -71,12 +71,52 @@ def news_detail(news_id):
             comment_dict['is_like'] = True
         comment_list.append(comment_dict)
 
+    # 当前用户是否关注当前新闻作者,默认False
+    is_followed = False
+    if news.user and user:
+        if news.user in user.followed:
+            is_followed = True
+
+    # 设置头像路径
+    user_pic = None
+    try:
+        user_pic = constants.QINIU_DOMIN_PREFIX + news.user.avatar_url
+    except Exception as e:
+        current_app.logger.error(e)
+
+    # 设置新闻主的新闻篇数
+    news_count = []
+    try:
+        news_count = news.user.news_list
+    except Exception as e:
+        current_app.logger.error(e)
+
+    author_news = []    # 新闻列表
+    for item in news_count:
+        author_news.append(item)
+    news_count = len(author_news)
+
+    # 关注人数
+    followers_count = []
+    try:
+        followers_count = news.user.followers
+    except Exception as e:
+        current_app.logger.error(e)
+    author_followers = []
+    for item in followers_count:
+        author_followers.append(item)
+    followers_count = len(author_followers)
+    print(followers_count)
     data = {
         'user': user.to_dict() if user else None,
         'news': news,
         'news_dict_li': click_news_list,
         'is_collection': is_collection,
-        'comments': comment_list
+        'comments': comment_list,
+        'is_followed': is_followed,
+        'user_pic': user_pic,
+        'news_count': news_count,
+        'followers_count': followers_count
     }
     return render_template('news/detail.html', data=data)
 
@@ -232,3 +272,54 @@ def set_comment_like():
 
     # 返回结果
     return jsonify(errno=RET.OK, errmsg='操作成功')
+
+
+@news_blu.route('/followed_user', methods=['POST'])
+@user_login_data
+def followed_user():
+    '''关注或者取消关注用户'''
+
+    # 获取登录用户信息
+    user = g.user
+    print(user)
+    if not user:
+        return jsonify(errno=RET.SESSIONERR, errmsg="未登录")
+
+    # 获取参数
+    user_id = request.json.get('user_id')
+    action = request.json.get('action')
+
+    # 判断参数
+    if not all([user_id, action]):
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+    if action not in ['follow', 'unfollow']:
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+
+    # 获取要被关注的用户
+    try:
+        other = User.query.get(user_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据查询错误")
+
+    if not other:
+        return jsonify(errno=RET.NODATA, errmsg="未查询到数据")
+
+    if other.id == user.id:
+        return jsonify(errno=RET.PARAMERR, errmsg="请勿关注自己")
+
+    # 根据要执行的操作去修改对应的数据
+    if action == 'follow':
+        # 如果other不在该用户的关注列表中
+        if other not in user.followed:
+            user.followed.append(other)
+        else:
+            return jsonify(errno=RET.DATAEXIST, errmsg="当前用户已被关注")
+    else:
+        # 取消关注
+        if other in user.followed:
+            user.followed.remove(other)
+        else:
+            return jsonify(errno=RET.DATAEXIST, errmsg="当前用户未被关注")
+
+    return jsonify(errno=RET.OK, errmsg="操作成功")

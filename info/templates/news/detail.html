@@ -88,7 +88,25 @@
 {% endblock %}
 
 {% block authorBlock %}
-    <div class="author_card">
-        ...
-    </div>
+    {% if data.news.user %}
+        <div class="author_card">
+            <a href="#" class="author_pic">
+                <img src={% if data.user_pic %}
+                    {{ data.user_pic }}
+                {% else %}
+                    "../../static/news/images/user_pic.png"
+                {% endif %} alt="用户图片">
+            </a>
+            <a href="#" class="author_name">{{ data.news.user.nick_name }}</a>
+            <div class="author_resume">签名：{{ data.news.user.signature }}</div>
+            <div class="writings"><span>总篇数</span><b>{{ data.news_count }}</b></div>
+            <div class="follows"><span>粉丝</span><b>{{ data.followers_count }}</b></div>
+            <a href="javascript:;" class="focus fr" data-userid="{{ data.news.user.id }}"
+               style="display: {% if data.is_followed %}none{% else %}block{% endif %}">关注</a>
+            <a href="javascript:;" class="focused fr" data-userid="{{ data.news.user.id }}"
+               style="display: {% if data.is_followed %}block{% else %}none{% endif %}"><span
+                    class="out">已关注</span><span class="over">取消关注</span></a>
+        </div>
+    {% endif %}
+
 {% endblock %}

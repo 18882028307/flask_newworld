@@ -70,6 +70,7 @@ def base_info():
 @profile_blu.route('/pic_info', methods=['GET', 'POST'])
 @user_login_data
 def pic_info():
+    '''上传头像'''
     user = g.user
     # 如果是GET请求,返回用户数据
     if request.method == 'GET':
@@ -101,7 +102,7 @@ def pic_info():
         db.session.rollback()
         return jsonify(errno=RET.DBERR, errmsg="保存用户数据错误")
 
-    return jsonify(errno=RET.OK, errmsg='OK', data={'avatar_url':constants.QINIU_DOMIN_PREFIX + url})
+    return jsonify(errno=RET.OK, errmsg='OK', data={'avatar_url': constants.QINIU_DOMIN_PREFIX + url})
 
 
 @profile_blu.route('/pass_info', methods=['GET', 'POST'])
