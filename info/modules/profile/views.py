@@ -1,6 +1,7 @@
 from flask import render_template, g, request, jsonify, current_app, session, redirect
 
 from info import db, constants
+from info.models import Category, News
 from info.modules.profile import profile_blu
 from info.utils.common import user_login_data
 from info.utils.image_storage import storage
@@ -160,7 +161,7 @@ def user_collection():
         # 获取分页数据
         collections = paginate.items
         # 获取当前页
-        current_app = paginate.page
+        current_page = paginate.page
         # 获取总页数
         total_page = paginate.pages
     except Exception as e:
@@ -173,7 +174,124 @@ def user_collection():
     # 返回数据
     data = {
         'total_page': total_page,
-        'current_page': current_app,
+        'current_page': current_page,
         'collections': collection_dict_li
     }
     return render_template('news/user_collection.html', data=data)
+
+@profile_blu.route('/news_release', methods=['GET', 'POST'])
+@user_login_data
+def news_release():
+    # GET请求
+    if request.method == 'GET':
+        # 1. 获取新闻分类数据
+        categories = []
+        try:
+            # 获取所有的分类数据
+            categories = Category.query.all()
+        except Exception as e:
+            current_app.logger.error(e)
+        # 2. 移除最新分类
+        # 定义列表保存分类数据
+        categories_dicts = []
+
+        for category in categories:
+            # 获取字典
+            cate_dict = category.to_dict()
+            # 拼接内容
+            categories_dicts.append(cate_dict)
+        categories_dicts.pop(0)
+        # 返回数据
+        return render_template('news/user_news_release.html', data={'categories': categories_dicts})
+
+    # 1. 获取要提交的数据
+    title = request.form.get('title')
+    source = '个人发布'
+    digest = request.form.get('digest')
+    content = request.form.get('content')
+    index_image = request.files.get("index_image")
+    category_id = request.form.get("category_id")
+
+
+    # 校验参数
+    if not all([title, source, digest, content, index_image, category_id]):
+        return jsonify(errno=RET.PARAMERR, errmsg="参数有误")
+
+    # 3.取到图片，将图片上传到七牛云
+    try:
+        index_image_data = index_image.read()
+        # 上传到七牛云
+        key = storage(index_image_data)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg="参数有误")
+
+    # 保存数据
+    news = News()
+    news.title = title
+    news.digest = digest
+    news.source = source
+    news.content = content
+    news.index_image_url = constants.QINIU_DOMIN_PREFIX + key
+    news.category_id = category_id
+    news.user_id = g.user.id
+    # 新闻状态,将新闻设置为1代表待审核状态
+    news.status = 1
+
+    # 手动设置新闻状态,在返回前commit提交
+    try:
+        db.session.add(news)
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        db.session.rollback()
+        return jsonify(errno=RET.DBERR, errmsg="保存数据失败")
+    # 返回
+    return jsonify(errno=RET.OK, errmsg='发布成功，等待审核')
+
+
+@profile_blu.route('/news_list')
+@user_login_data
+def user_news_list():
+    '''用户发布的新闻列表'''
+    # 获取参数
+    p = request.args.get('p')
+    # 判断参数
+    try:
+        p = int(p)
+    except Exception as e:
+        current_app.logger.error(e)
+        p = 1
+    # 获取当前用户
+    user = g.user
+    news_list = []  # 用户发布新闻列表
+    current_page = 1    # 当前页数
+    total_page = 1  # 总页数
+
+    try:
+        # 进行分页数据查询
+        # paginate（page, per_page, error_out, max_per_page）
+        # paginate = user.news_list.paginate(p, constants.USER_COLLECTION_MAX_NEWS, False)
+        paginate = News.query.filter(News.user_id == user.id).paginate(p, constants.USER_COLLECTION_MAX_NEWS, False)
+
+        # 获取当前页数据
+        news_list = paginate.items
+        # 获取当前页
+        current_page = paginate.page
+        # 获取总页数
+        total_page = paginate.pages
+    except Exception as e:
+        current_app.logger.error(e)
+
+    news_dict_li = []
+    for news_item in news_list:
+        news_dict_li.append(news_item)
+
+    data = {
+        'news_list': news_dict_li,
+        'total_page': total_page,
+        'current_page': current_page
+    }
+
+    # 返回数据
+    return render_template('news/user_news_list.html', data=data)
