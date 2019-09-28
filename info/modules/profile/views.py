@@ -1,7 +1,7 @@
 from flask import render_template, g, request, jsonify, current_app, session, redirect
 
 from info import db, constants
-from info.models import Category, News
+from info.models import Category, News, tb_user_follows, User
 from info.modules.profile import profile_blu
 from info.utils.common import user_login_data
 from info.utils.image_storage import storage
@@ -180,6 +180,7 @@ def user_collection():
     }
     return render_template('news/user_collection.html', data=data)
 
+
 @profile_blu.route('/news_release', methods=['GET', 'POST'])
 @user_login_data
 def news_release():
@@ -213,7 +214,12 @@ def news_release():
     index_image = request.files.get("index_image")
     category_id = request.form.get("category_id")
 
-
+    print(title)
+    print(source)
+    print(digest)
+    print(content)
+    print(index_image)
+    print(category_id)
     # 校验参数
     if not all([title, source, digest, content, index_image, category_id]):
         return jsonify(errno=RET.PARAMERR, errmsg="参数有误")
@@ -296,3 +302,54 @@ def user_news_list():
 
     # 返回数据
     return render_template('news/user_news_list.html', data=data)
+
+
+@profile_blu.route('/user_follow')
+@user_login_data
+def user_follow():
+    # 获取页数
+    p = request.args.get('p', 1)
+    # 判断参数
+    try:
+        p = int(p)
+    except Exception as e:
+        current_app.logger.error(e)
+        p = 1
+
+    # 获取当前用户
+    user = g.user
+    if not user:
+        return jsonify(errno=RET.SESSIONERR, errmsg="未登录")
+
+    # 分页
+    pagedatas = []
+    current_page = 1
+    total_page = 1
+    try:
+        paginate = user.followed.paginate(p, constants.USER_FOLLOWED_MAX_COUNT, False)
+        # 当前页数据
+        pagedatas = paginate.items
+        # 当前页数
+        current_page = paginate.page
+        # 总页数
+        total_page = paginate.pages
+    except Exception as e:
+        current_app.logger.error(e)
+
+    print(pagedatas)
+    user_list = []
+    for page in pagedatas:
+        user_list.append(page.to_dict())
+    data = {
+        'users': user_list,
+        'total_page': total_page,
+        'current_page': current_page
+    }
+    return render_template('news/user_follow.html', data=data)
+
+@profile_blu.route('/other_info')
+@user_login_data
+def other_info():
+    """查看其他用户信息"""
+    return render_template('news/other.html')
+

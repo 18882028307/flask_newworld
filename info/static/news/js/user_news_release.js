@@ -7,7 +7,6 @@ function getCookie(name) {
 $(function () {
 
     $(".release_form").submit(function (e) {
-        alert('????')
         e.preventDefault()
         $(this).ajaxSubmit({
             url: '/user/news_release',

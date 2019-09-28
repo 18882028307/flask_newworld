@@ -77,46 +77,13 @@ def news_detail(news_id):
         if news.user in user.followed:
             is_followed = True
 
-    # 设置头像路径
-    user_pic = None
-    try:
-        user_pic = constants.QINIU_DOMIN_PREFIX + news.user.avatar_url
-    except Exception as e:
-        current_app.logger.error(e)
-
-    # 设置新闻主的新闻篇数
-    news_count = []
-    try:
-        news_count = news.user.news_list
-    except Exception as e:
-        current_app.logger.error(e)
-
-    author_news = []    # 新闻列表
-    for item in news_count:
-        author_news.append(item)
-    news_count = len(author_news)
-
-    # 关注人数
-    followers_count = []
-    try:
-        followers_count = news.user.followers
-    except Exception as e:
-        current_app.logger.error(e)
-    author_followers = []
-    for item in followers_count:
-        author_followers.append(item)
-    followers_count = len(author_followers)
-    print(followers_count)
     data = {
         'user': user.to_dict() if user else None,
-        'news': news,
+        'news': news.to_dict(),
         'news_dict_li': click_news_list,
         'is_collection': is_collection,
         'comments': comment_list,
         'is_followed': is_followed,
-        'user_pic': user_pic,
-        'news_count': news_count,
-        'followers_count': followers_count
     }
     return render_template('news/detail.html', data=data)
 
@@ -323,3 +290,4 @@ def followed_user():
             return jsonify(errno=RET.DATAEXIST, errmsg="当前用户未被关注")
 
     return jsonify(errno=RET.OK, errmsg="操作成功")
+

@@ -11,7 +11,6 @@ $(function () {
         // TODO 修改密码
         var params = {}
         $(this).serializeArray().map(function (x) {
-            alert(x.name)
             params[x.name] = x.value;9
         });
         // 取到两次密码进行判断
