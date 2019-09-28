@@ -1,7 +1,7 @@
-from flask import render_template, g, request, jsonify, current_app, session, redirect
+from flask import render_template, g, request, jsonify, current_app, session, redirect, abort
 
 from info import db, constants
-from info.models import Category, News, tb_user_follows, User
+from info.models import Category, News, User
 from info.modules.profile import profile_blu
 from info.utils.common import user_login_data
 from info.utils.image_storage import storage
@@ -351,5 +351,92 @@ def user_follow():
 @user_login_data
 def other_info():
     """查看其他用户信息"""
-    return render_template('news/other.html')
+    # 获取当前用户
+    user = g.user
+    # 获取其他用户id
+    other_user_id = request.args.get('id')
+    if not other_user_id:
+        abort(404)
+    # 查询用户模型
+    other = None
+    try:
+        other = User.query.get(other_user_id)
+    except Exception as e:
+        current_app.logger.error(e)
+    if not other:
+        abort(404)
+    # 判断当前用户是否关注过该用户
+    is_followed = False
 
+    if user:
+        if other.followers.filter(User.id == user.id).count() > 0:
+            is_followed = True
+    try:
+        user = user.to_dict()
+    except Exception as e:
+        current_app.logger.error(e)
+        user = None
+
+    data = {
+        'user': user,
+        'other_info': other.to_dict(),
+        'is_followed': is_followed
+    }
+
+    return render_template('news/other1.html', data=data)
+
+
+@profile_blu.route('/other_news_list')
+def other_news_list():
+    # 获取页数
+    p = request.args.get('p', 1)
+    user_id = request.args.get('user_id')
+
+    try:
+        p = int(p)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+
+    if not all([p, user_id]):
+        return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+
+    # 查询对应id的用户
+    user = None
+    try:
+        user = User.query.get(user_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据查询错误")
+
+    if not user:
+        return jsonify(errno=RET.NODATA, errmsg="用户不存在")
+
+    # 分页
+    current_page = 1
+    total_page = 1
+    try:
+        paginate = News.query.filter(News.user_id == user_id, News.status == 0).paginate(p, constants.OTHER_NEWS_PAGE_MAX_COUNT, False)
+        # 当前页数据
+        items = paginate.items
+        # 当前页页数
+        current_page = paginate.page
+        # 总页数
+        total_page = paginate.pages
+
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据查询错误")
+
+    news_dict_li = []
+    for news_item in items:
+        news_dict_li.append(news_item.to_review_dict())
+
+    for i in news_dict_li:
+        print(i['status'])
+    data = {
+        'news_list': news_dict_li,
+        'total_page': total_page,
+        'current_page': current_page
+    }
+    return jsonify(errno=RET.OK, errmsg='OK', data=data)

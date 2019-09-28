@@ -14,29 +14,52 @@
     <div class="header_con">
         <div class="header">
             <a href="#" class="logo fl"><img src="../../static/news/images/logo.png" alt="logo"></a>
-            <div class="user_login fr" style="display: block;">
-                <img src="../../static/news/images/person01.png" class="lgin_pic">
-                <a href="#">张大山</a>
-                <a href="#">退出</a>
-            </div>
+            {% if data.user %}
+                <div class="user_login fr">
+                    <img src="{% if data.user.avatar_url %}{{ data.user.avatar_url }}{% else %}../../static/news/images/person01.png{% endif %}" class="lgin_pic">
+                    <a href="/user/info" id="nick_name">{{ data.user.nick_name }}</a>
+                    <a href="javascript:;" onclick="logout()">退出</a>
+                </div>
+             {% else %}
+                {# 如果没有登录，则显示登录注册按钮 #}
+                <div class="user_btns fr">
+                    <a href="javascript:;" class="login_btn">登录</a> / <a href="javascript:;" class="register_btn">注册</a>
+                </div>
+            {% endif %}
         </div>
     </div>
     
     <div class="conter_con">
         <div class="user_menu_con fl">
             <div class="user_center_pic">
-                <img src="../../static/news/images/user_pic.png" alt="用户图片">
+                <img src="{% if data.other_info.avatar_url %}
+                          {{ data.other_info.avatar_url }}
+                          {% else %}
+                          ../../static/news/images/user_pic.png
+                          {% endif %} " alt="用户图片">
             </div>
-            <div class="user_center_name">用户李思</div>
+            <div class="user_center_name">{{ data.other_info.nick_name }}</div>
 
             <ul class="other_detail">
-                <li>性 别：女</li>
-                <li>签 名：这个人很懒，什么都没留下</li>
+                <li>性 别：{% if data.other_info.gender == 'MAN'%}男
+                           {% else %}女
+                           {% endif %}
+                </li>
+                <li>签 名：{% if data.other_info.signature %}
+                              {{ data.other_info.signature }}
+                           {% else %}
+                              这个人很懒，什么都没留下
+                           {% endif %}
+                </li>
             </ul>
             
             <div class="focus_other">
-                <a href="javascript:;" class="focus">关注</a>
-        <a href="javascript:;" class="focused"><span class="out">已关注</span><span class="over">取消关注</span></a>
+                <a href="javascript:;" class="focus block-center" data-userid="{{ data.other_info.id }}" style="display: {% if data.is_followed %}none
+                {% else %}block
+                {% endif %}">关注</a><br>
+                <a href="javascript:;" class="focused block-center" data-userid="{{ data.other_info.id }}" style="display: {% if data.is_followed %}block
+                {% else %}none
+                {% endif %}"><span class="out">已关注</span><span class="over">取消关注</span></a>
             </div>            
 
         </div>

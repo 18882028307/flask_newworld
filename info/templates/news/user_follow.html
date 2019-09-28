@@ -22,7 +22,7 @@
                                    ../../static/news/images/user_pic.png
                                    {% endif %}" alt="author_pic">
                     </a>
-                    <a href="#" class="author_name">{{ user.nick_name }}</a>
+                    <a href="/user/other_info?id={{ user.id }}" target="_blank" class="author_name">{{ user.nick_name }}</a>
                     <div class="author_resume">{{ user.signature }}</div>
                     <div class="writings"><span>总篇数</span><b>{{ user.news_count }}</b></div>
                     <div class="follows"><span>粉丝</span><b>{{ user.followers_count }}</b></div>

@@ -16,7 +16,7 @@
             {% for news in data.news_list %}
                 <li>
                 {% if news.status == 0 %}
-                    <a href="/news/{{ news.id }}">{{ news.title }}</a>
+                    <a href="/news/{{ news.id }}" target="_blank">{{ news.title }}</a>
                     <em class="pass">已通过</em>
                     <span>{{ news.create_time }}</span>
                 {% elif news.status == 1 %}
