@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from flask import render_template, request, current_app, session, g, redirect, url_for, jsonify
 
 from info import user_login_data, constants
-from info.models import User
+from info.models import User, News
 from info.modules.admin import admin_blu
 from info.utils.response_code import RET
 
@@ -185,3 +185,41 @@ def user_list():
         'users': users_list
     }
     return render_template('admin/user_list.html', data=data)
+
+
+@admin_blu.route('/news_review')
+def news_review():
+    p = request.args.get('p', 1)
+    keywords = request.args.get('keywords', None)
+    try:
+        page = int(p)
+    except Exception as e:
+        current_app.logger.error(e)
+        p = 1
+
+    news = []
+    current_page = 1
+    total_page = 1
+
+    try:
+        filters = [News.status != 0]
+        # 如果右关键字
+        if keywords:
+            filters.append(News.title.contains(keywords))
+        paginate = News.query.filter(*filters).order_by(News.create_time.desc()).paginate(p, constants.ADMIN_NEWS_PAGE_MAX_COUNT, False)
+        news = paginate.items
+        current_page = paginate.page
+        total_page = paginate.pages
+    except Exception as e:
+        current_app.logger.error(e)
+
+    news_list = []
+    for new in news:
+        news_list.append(new.to_review_dict())
+
+    data = {
+        'total_page': total_page,
+        'current_page': current_page,
+        'news_list': news_list
+    }
+    return render_template('admin/news_review.html', data=data)
