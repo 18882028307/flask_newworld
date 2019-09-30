@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from flask import render_template, request, current_app, session, g, redirect, url_for, jsonify
 
-from info import user_login_data, constants
+from info import user_login_data, constants, db
 from info.models import User, News
 from info.modules.admin import admin_blu
 from info.utils.response_code import RET
@@ -90,12 +90,12 @@ def user_count():
     # 月新增数
     mon_count = 0
     t = time.localtime()
-    print('time.localtime():', t)
+
     begin_mon_date_str = '%d-%02d-01' % (t.tm_year, t.tm_mon)
-    print('begin_mon_date_str:', begin_mon_date_str)
+
     # 将字符串转成datetime对象
     begin_mon_date = datetime.strptime(begin_mon_date_str, "%Y-%m-%d")
-    print('begin_mon_date:', begin_mon_date)
+
     try:
         mon_count = User.query.filter(User.is_admin == 0, User.create_time > begin_mon_date).count()
     except Exception as e:
@@ -104,7 +104,7 @@ def user_count():
     # 日新增数
     day_count = 0
     begin_day_date = datetime.strptime(('%d-%02d-%02d' % (t.tm_year, t.tm_mon, t.tm_mday)), "%Y-%m-%d")
-    print('begin_day_date:', begin_day_date)
+
     try:
         day_count = User.query.filter(User.is_admin == False, User.create_time > begin_day_date).count()
     except Exception as e:
@@ -117,17 +117,17 @@ def user_count():
 
     # 取到今天的时间字符串
     today_date_str = ('%d-%02d-%02d' % (t.tm_year, t.tm_mon, t.tm_mday))
-    print('today_date_str:', today_date_str)
+
     # 转成时间对象
     today_date = datetime.strptime(today_date_str, "%Y-%m-%d")
 
     for i in range(0, 31):
         # 取到某一天的0点0分
         begin_date = today_date - timedelta(days=i)
-        print('begin_date%s:%s' %(str(i), begin_date))
+
         # 取到下一天的0点0分
         end_date = today_date - timedelta(days=(i - 1))
-        print('end_date%s:%s' % (str(i), end_date))
+
         count = User.query.filter(User.is_admin == 0, User.last_login >= begin_date,
                                   User.last_login < end_date).count()
         active_count.append(count)
@@ -191,8 +191,11 @@ def user_list():
 def news_review():
     p = request.args.get('p', 1)
     keywords = request.args.get('keywords', None)
+
+    print(p)
+    print(keywords)
     try:
-        page = int(p)
+        p = int(p)
     except Exception as e:
         current_app.logger.error(e)
         p = 1
@@ -210,6 +213,8 @@ def news_review():
         news = paginate.items
         current_page = paginate.page
         total_page = paginate.pages
+        print(current_page)
+        print(total_page)
     except Exception as e:
         current_app.logger.error(e)
 
@@ -222,4 +227,67 @@ def news_review():
         'current_page': current_page,
         'news_list': news_list
     }
+    print(data)
     return render_template('admin/news_review.html', data=data)
+
+
+@admin_blu.route('/news_review_detail', methods=['GET', 'POST'])
+def news_review_detail():
+    '''新闻审核'''
+    if request.method == 'GET':
+        news_id = request.args.get('news_id')
+        if not news_id:
+            return render_template('admin/news_review_detail.html', data={'errmsg': '未查询到此新闻'})
+        # 通过id查询
+        news = None
+        try:
+            news = News.query.get(news_id)
+        except Exception as e:
+            current_app.logger.error(e)
+
+        if not news:
+            return render_template('admin/news_review_detail.html', data={'errmsg': '未查询到此新闻'})
+
+        data = {'news': news.to_dict()}
+
+        return render_template('admin/news_review_detail.html', data=data)
+    # 获取参数
+    news_id = request.json.get('news_id')
+    action = request.json.get('action')
+    print(news_id)
+    print(action)
+    if not all([news_id, action]):
+        return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+    if action not in ('accept', 'reject'):
+        return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+
+
+    news = None
+    try:
+        # 查询新闻
+        news = News.query.get(news_id)
+    except Exception as e:
+        current_app.logger.error(e)
+
+    if not news:
+        return jsonify(errno=RET.NODATA, errmsg='未查询到数据')
+
+    # 根据不同的状态设置不同的值
+    if action == 'accept':
+        news.status = 0
+    else:
+        # 拒绝通过
+        reason = request.json.get('reason')
+        if not reason:
+            return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+        news.reason = reason
+        news.status = -1
+
+    # 保存数据库
+    try:
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        db.session.rollback()
+        return jsonify(errno=RET.DBERR, errmsg='数据保存失败')
+    return jsonify(errno=RET.OK, errmsg='操作成功')

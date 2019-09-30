@@ -501,6 +501,7 @@ body{
 	background:#25c192;
 	border:0px;
 	outline:none;
+	cursor: pointer;
 }
 
 .cancel{
@@ -511,6 +512,7 @@ body{
 	background:#25c192;
 	border:0px;
 	outline:none;
+	cursor: pointer;
 }
 
 .line_top{
