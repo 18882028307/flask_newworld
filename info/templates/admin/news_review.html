@@ -32,11 +32,11 @@
                         <td class="tleft">{{ news.title }}</td>
                         <td>{{ news.create_time }}</td>
                         <td>{% if news.status == 0 %}
-                            已通过
+                            <p style="color: green">已通过</p>
                             {% elif news.status == -1 %}
                             <p style="color: red">未通过</p>
                             {% else %}
-                            未审核
+                            <p style="color: deepskyblue">未审核</p>
                         {% endif %}</td>
                         <td>
                             <a href="{{ url_for("admin.news_review_detail", news_id=news.id) }}" class="review">审核</a>

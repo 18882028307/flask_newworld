@@ -13,9 +13,7 @@ from info.utils.response_code import RET
 
 @admin_blu.route('/login', methods=['GET', 'POST'])
 def admin_login():
-
     '''管理员登录'''
-
     if request.method == 'GET':
         # 获取session
         user_id = session.get('user_id', None)
@@ -192,8 +190,6 @@ def news_review():
     p = request.args.get('p', 1)
     keywords = request.args.get('keywords', None)
 
-    print(p)
-    print(keywords)
     try:
         p = int(p)
     except Exception as e:
@@ -213,8 +209,6 @@ def news_review():
         news = paginate.items
         current_page = paginate.page
         total_page = paginate.pages
-        print(current_page)
-        print(total_page)
     except Exception as e:
         current_app.logger.error(e)
 
@@ -227,7 +221,6 @@ def news_review():
         'current_page': current_page,
         'news_list': news_list
     }
-    print(data)
     return render_template('admin/news_review.html', data=data)
 
 
@@ -291,3 +284,48 @@ def news_review_detail():
         db.session.rollback()
         return jsonify(errno=RET.DBERR, errmsg='数据保存失败')
     return jsonify(errno=RET.OK, errmsg='操作成功')
+
+
+@admin_blu.route('/news_edit')
+def news_edit():
+    '''返回新闻列表'''
+
+    p = request.args.get('p', 1)
+    keywords = request.args.get('keywords', None)
+
+    # 判断参数
+    try:
+        p = int(p)
+    except Exception as e:
+        current_app.logger.error(e)
+        p = 1
+
+    news_list = []
+    current_page = 1
+    total_page = 1
+
+    try:
+        # 如果有关键词
+        filter = []
+        if keywords:
+            filter.append(News.title.contains(keywords))
+        paginate = News.query.filter(*filter) \
+            .order_by(News.create_time.desc())\
+            .paginate(p, constants.ADMIN_NEWS_PAGE_MAX_COUNT, False)
+
+        new_items = paginate.items
+        current_page = paginate.page
+        total_page = paginate.pages
+
+    except Exception as e:
+        current_app.logger.error(e)
+
+    for new in new_items:
+        news_list.append(new.to_review_dict())
+
+    data = {
+        'total_page': total_page,
+        'current_page': current_page,
+        'news_list': news_list
+    }
+    return render_template('admin/news_edit.html', data=data)
