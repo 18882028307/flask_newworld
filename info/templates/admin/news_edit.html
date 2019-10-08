@@ -23,9 +23,10 @@
 			<table class="common_table">
 				<tr>
 					<th width="5%">id</th>
-					<th width="65%">标题</th>
+					<th width="60%">标题</th>
+                    <th width="10%">点击量</th>
 					<th width="15%">发布时间</th>
-					<th width="15%">管理操作</th>
+					<th width="10%">管理操作</th>
 				</tr>
 				{% for news in data.news_list %}
                     <tr>
@@ -34,7 +35,7 @@
                         <td>{{ news.clicks }}</td>
                         <td>{{ news.create_time }}</td>
                         <td>
-                            <a href="#" class="edit">编辑</a>
+                            <a href="{{ url_for('admin.news_edit_detail') }}?news_id={{ news.id }}" class="edit">编辑</a>
                         </td>
                     </tr>
                 {% endfor %}

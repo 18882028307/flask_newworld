@@ -4,7 +4,7 @@ function getCookie(name) {
 }
 
 $(function() {
-    $(".news_review").submit(function (e) {
+    $(".news_edit").submit(function (e) {
         e.preventDefault()
 
         // TODO 新闻审核提交
