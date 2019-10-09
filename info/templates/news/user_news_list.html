@@ -24,7 +24,7 @@
                     <em class="review">审核中</em>
                     <span>{{ news.create_time }}</span>
                 {% else %}
-                    <a href="javascript:;"></a>
+                    <a href="javascript:;">{{ news.title }}</a>
                     <em class="nopass">未通过</em>
                     <span>{{ news.create_time }}</span>
                     <b>未通过的原因：{{ news.reason }}</b>
