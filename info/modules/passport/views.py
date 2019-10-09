@@ -59,7 +59,6 @@ def send_sms_code():
     # 判断参数是否有值
     if not all([mobile, image_code, image_code_id]):
         # {"errno": "4100", "errmsg": "参数有误"}
-        print('111')
         return jsonify(errno=RET.PARAMERR, errmsg="参数有误")
 
     # 验证手机号是否正确
@@ -122,21 +121,26 @@ def register():
         # if not re.match('1[35678]\\d{9}', mobile):
         #     return jsonify(errno=RET.PARAMERR, errmsg='手机号格式不正确')
 
+        # 验证手机号是否注册
+        try:
+            user = User.query.filter(User.mobile == mobile).first()
+            if user:
+                return jsonify(errno=RET.PARAMERR, errmsg='此账号已注册')
+        except Exception as e:
+            current_app.logger.error(e)
+
         # 2. 从redis中获取指定手机号对应的短信验证码
         try:
             real_sms_code = redis_store.get('SMS_' + mobile)
         except Exception as e:
             current_app.logger.error(e)
-            print('111')
             return jsonify(errno=RET.DBERR, errmsg='数据查询失败')
 
         if not real_sms_code:
-            print('222')
             return jsonify(errno=RET.NODATA, errmsg='验证码已过期')
 
         # 3. 校验用户输入的验证码
         if real_sms_code != smscode:
-            print('333')
             return jsonify(errno=RET.DATAERR, errmsg='验证码输入错误')
 
 
@@ -158,7 +162,6 @@ def register():
             # 添加日志
             current_app.logger.error(e)
             db.session.rollback()
-            print('444')
             return jsonify(errno=RET.DBERR, errmsg='数据保存失败')
 
         # 5. 在session中保存用户登录状态

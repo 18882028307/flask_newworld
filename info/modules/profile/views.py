@@ -214,12 +214,6 @@ def news_release():
     index_image = request.files.get("index_image")
     category_id = request.form.get("category_id")
 
-    print(title)
-    print(source)
-    print(digest)
-    print(content)
-    print(index_image)
-    print(category_id)
     # 校验参数
     if not all([title, source, digest, content, index_image, category_id]):
         return jsonify(errno=RET.PARAMERR, errmsg="参数有误")

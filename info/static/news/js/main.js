@@ -198,7 +198,7 @@ $(function(){
                     location.reload()
                 }else {
                     $("#register-password-err").html(resp.errmsg)
-                    $("#register_password-err").show()
+                    $("#register-password-err").css('display','block')
                 }
             }
         })
